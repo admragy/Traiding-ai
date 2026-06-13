@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom fade-in and slide-up animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Soft progress bar and background pulses */
+.bg-cream-tint {
+  background-color: #fbfbf9;
+}
+
+.border-warm-beige {
+  border-color: #e6e4dc;
+}
+
+.text-charcoal {
+  color: #1e1e1a;
+}
+
+/* Custom Global theme setups to support dynamic UI presets seamlessly in the browser preview */
+.theme-light {
+  color-scheme: light;
+}
+.theme-matrix {
+  color-scheme: dark;
+}
+.theme-amber {
+  color-scheme: dark;
+}
+
+/* Light theme overrides */
+.theme-light .bg-slate-950,
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/60,
+.theme-light .bg-slate-950\/85 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .bg-slate-900,
+.theme-light .bg-slate-900\/25,
+.theme-light .bg-slate-900\/20,
+.theme-light .bg-slate-900\/30,
+.theme-light .bg-slate-905\/30,
+.theme-light .bg-slate-900\/40,
+.theme-light .bg-slate-900\/60,
+.theme-light .bg-slate-900\/80 {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-light .bg-slate-900\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+.theme-light .border-slate-800,
+.theme-light .border-slate-900,
+.theme-light .border-slate-850 {
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .text-white {
+  color: #0f172a !important;
+}
+
+.theme-light .text-slate-100 {
+  color: #1e293b !important;
+}
+
+.theme-light .text-slate-300,
+.theme-light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.theme-light .text-slate-500 {
+  color: #64748b !important;
+}
+
+.theme-light header#nexus-header-bar {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Matrix & Amber text modifications for ultra cyber-terminal styles */
+.theme-matrix .text-slate-450,
+.theme-matrix .text-slate-400,
+.theme-matrix .text-slate-500 {
+  color: #10b981 !important;
+  opacity: 0.8;
+}
+
+.theme-matrix .border-slate-800,
+.theme-matrix .border-slate-900,
+.theme-matrix .border-slate-850 {
+  border-color: #064e3b !important;
+}
+
+.theme-matrix .text-white {
+  color: #34d399 !important;
+}
+
+.theme-amber .text-slate-450,
+.theme-amber .text-slate-400,
+.theme-amber .text-slate-500 {
+  color: #f59e0b !important;
+  opacity: 0.8;
+}
+
+.theme-amber .border-slate-800,
+.theme-amber .border-slate-900,
+.theme-amber .border-slate-850 {
+  border-color: #78350f !important;
+}
+
+.theme-amber .text-white {
+  color: #fbbf24 !important;
+}
+
