@@ -10,6 +10,7 @@ import SettingsSection from "./components/SettingsSection";
 import MarketStateSection from "./components/MarketStateSection";
 import SignalsPanel from "./components/SignalsPanel";
 import UniverseTable from "./components/UniverseTable";
+import FinancialAdvisorPanel from "./components/FinancialAdvisorPanel";
 
 const PAIRS = [
   // ======= Forex (20 pairs) =======
@@ -388,15 +389,15 @@ export default function App() {
     theme === "matrix"
       ? "theme-matrix bg-zinc-950 text-emerald-400 font-mono"
       : theme === "amber"
-      ? "theme-amber bg-stone-950 text-amber-500 font-sans"
+      ? "theme-amber bg-stone-950 text-amber-500"
       : theme === "light"
-      ? "theme-light bg-slate-50 text-slate-850 font-sans"
-      : "theme-carbon bg-slate-950 text-slate-100 font-sans";
+      ? "theme-light bg-slate-50 text-slate-850"
+      : "theme-carbon bg-slate-950 text-slate-100";
 
   return (
     <div
       id="nexus-app-container"
-      className={`${themeWrapperClass} min-h-screen shrink-0 overflow-x-hidden antialiased pb-12 select-none`}
+      className={`${themeWrapperClass} ${isAr ? "font-arabic" : (theme === "matrix" ? "font-mono" : "font-sans")} min-h-screen shrink-0 overflow-x-hidden antialiased pb-12 select-none`}
       dir={isAr ? "rtl" : "ltr"}
     >
       {/* Top Background Cyber Light Lines */}
@@ -452,6 +453,15 @@ export default function App() {
                 signals={analysis.signals}
                 noTradeMessageEn={analysis.no_trade_message}
                 noTradeMessageAr={analysis.no_trade_message_ar}
+                language={language}
+              />
+            )}
+
+            {/* Algorithmic Sizer & Portfolio Advisor Module */}
+            {analysis && (
+              <FinancialAdvisorPanel
+                signals={analysis.signals}
+                marketRegime={analysis.regime}
                 language={language}
               />
             )}

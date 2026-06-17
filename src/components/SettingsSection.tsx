@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Settings, Send, RefreshCw, Globe, HelpCircle, ShieldAlert, Cpu, Sparkles, Play, Square, Activity, ChevronDown } from "lucide-react";
 import { translations } from "../translations";
 import { TelegramConfig, RigorLevel, Category } from "../types";
@@ -35,8 +35,10 @@ export default function SettingsSection({
   const t = translations[language];
   const isAr = language === "ar";
 
+  const loadedConfigRef = useRef({ token: "", chatId: "" });
   const [testLoading, setTestLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  const [forceScanLoading, setForceScanLoading] = useState(false);
   const [testFeedback, setTestFeedback] = useState<{ status: "success" | "error" | "none"; msg: string }>({ status: "none", msg: "" });
 
   // Autopilot 24/7 background worker state
@@ -97,6 +99,10 @@ export default function SettingsSection({
         if (data.config) {
           setAutopilotEnabled(data.config.enabled);
           setAutopilotInterval(data.config.intervalMinutes || 180);
+          loadedConfigRef.current = {
+            token: (data.config.token || "").trim(),
+            chatId: (data.config.chatId || "").trim(),
+          };
           if ((data.config.token && !config.token) || (data.config.chatId && !config.chatId)) {
             onConfigChange({
               token: data.config.token || config.token,
@@ -223,7 +229,15 @@ export default function SettingsSection({
 
   // Debounced auto-save credentials to server when edited
   useEffect(() => {
-    if (!config.token && !config.chatId) return;
+    if (!config.token || !config.chatId) return;
+
+    // Skip saving if the credentials are exactly the same as loaded from the database on boot
+    if (
+      config.token.trim() === loadedConfigRef.current.token &&
+      config.chatId.trim() === loadedConfigRef.current.chatId
+    ) {
+      return;
+    }
     
     const delayDebounceId = setTimeout(() => {
       fetch("/api/autopilot/save", {
@@ -237,7 +251,16 @@ export default function SettingsSection({
           intervalMinutes: autopilotInterval,
           activeCategories: activeCategories,
         }),
-      }).catch((e) => console.log("Silent dynamic autopilot credentials sync failed:", e));
+      })
+      .then((res) => {
+        if (res.ok) {
+          loadedConfigRef.current = {
+            token: config.token.trim(),
+            chatId: config.chatId.trim(),
+          };
+        }
+      })
+      .catch((e) => console.log("Silent dynamic autopilot credentials sync failed:", e));
     }, 1200);
 
     return () => clearTimeout(delayDebounceId);
@@ -287,6 +310,45 @@ export default function SettingsSection({
       });
     } finally {
       setTestLoading(false);
+    }
+  };
+
+  const handleForceScanNow = async () => {
+    if (!config.token || !config.chatId) {
+      setTestFeedback({
+        status: "error",
+        msg: isAr
+          ? "الرجاء إدخال توكن البوت ومعرّف القناة أولاً!"
+          : "Please insert Token and Chat ID first!",
+      });
+      return;
+    }
+    setForceScanLoading(true);
+    setTestFeedback({ status: "none", msg: "" });
+    try {
+      const res = await fetch("/api/autopilot/force-scan", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Immediate scan execution failed.");
+      }
+      setTestFeedback({
+        status: "success",
+        msg: isAr
+          ? "🟢 تم تشغيل جرد المسوم وبث الإشارات الفورية المستحقة لتيليجرام بنجاح!"
+          : "🟢 Immediate scan cycle ran successfully. Qualified signals sent to Telegram!",
+      });
+      if (data.diagnostics) {
+        setAutopilotDiags(data.diagnostics);
+      }
+    } catch (err: any) {
+      setTestFeedback({
+        status: "error",
+        msg: isAr
+          ? `خطأ أثناء الفحص الفوري: ${err.message || "عطل غير معروف"}`
+          : `Forced scan failed: ${err.message || "Unknown error"}`,
+      });
+    } finally {
+      setForceScanLoading(false);
     }
   };
 
@@ -528,7 +590,7 @@ export default function SettingsSection({
                     { label: "4m", labelAr: "٤ دقائق", val: 4 },
                     { label: "15m", labelAr: "١٥ دقيقة", val: 15 },
                     { label: "1h", labelAr: "ساعة", val: 60 },
-                    { label: "3h", labelAr: "٣ ساعات", val: 180 },
+                    { label: "4h", labelAr: "٤ ساعات", val: 240 },
                   ].map((opt) => (
                     <button
                       key={opt.val}
@@ -587,6 +649,15 @@ export default function SettingsSection({
                 >
                   {reportLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Send className="w-2.5 h-2.5" />}
                   <span>{isAr ? "بث التقرير الشامل الآن للتيليجرام" : "Broadcast Market Report to Telegram"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleForceScanNow}
+                  disabled={forceScanLoading}
+                  className="mt-1.5 w-full py-1.5 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 hover:text-white text-[9.5px] font-black uppercase rounded-lg transition cursor-pointer disabled:opacity-45 flex items-center justify-center gap-1"
+                >
+                  {forceScanLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-2.5 h-2.5 text-emerald-400" />}
+                  <span>{isAr ? "فحص فوري وبث الإشارات المحتملة الآن" : "Trigger Immediate Scan & Dispatch Now"}</span>
                 </button>
               </div>
             </div>

@@ -173,6 +173,87 @@ export default function SignalsPanel({ signals, noTradeMessageEn, noTradeMessage
                   </div>
                 </div>
 
+                {/* Advanced Quantitative Intelligence Layer */}
+                <div className="mt-3 bg-indigo-950/20 border border-indigo-500/10 rounded-xl p-3 text-[11px] space-y-3">
+                  <div className="flex items-center justify-between border-b border-indigo-500/10 pb-1.5">
+                    <span className="text-indigo-400 font-black uppercase tracking-wider text-[8px]">
+                      {isAr ? "🔬 بنية ميكروية وتوافق فيبوناتشي" : "🔬 MICROSTRUCTURE & CONVERGENCES"}
+                    </span>
+                    <span className="text-indigo-300 font-bold bg-indigo-500/10 px-1.5 py-0.5 rounded text-[8px]">
+                      {isAr ? "تصنيف معايرة تكييفية" : "ADAPTIVE CALIBRATION"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {/* Microstructure Panel */}
+                    <div className="space-y-1.5">
+                      <span className="text-[9px] text-slate-400 uppercase font-bold block">
+                        {isAr ? "دفاتر الطلبات (Imbalance)" : "ORDER BOOK PRESSURE"}
+                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] text-slate-200">
+                          {s.orderBookImbalance !== undefined && s.orderBookImbalance >= 0 
+                            ? `+${(s.orderBookImbalance * 100).toFixed(0)}% ${isAr ? "ضغط شراء" : "Bid Pressure"}`
+                            : `${((s.orderBookImbalance || 0) * 100).toFixed(0)}% ${isAr ? "ضغط بيع" : "Ask Pressure"}`}
+                        </span>
+                        <span className="text-[9px] text-slate-500 font-mono">
+                          {isAr ? "كثافة سيولة: " : "Volume Int: "}{(s.volumeClusterIntensity || 50)}%
+                        </span>
+                      </div>
+                      {/* Visual gauge */}
+                      <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${s.orderBookImbalance !== undefined && s.orderBookImbalance >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                          style={{ width: `${Math.round(50 + ((s.orderBookImbalance || 0) * 50))}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Fibonacci Levels matrix */}
+                    <div className="space-y-1">
+                      <span className="text-[9px] text-slate-400 uppercase font-bold block">
+                        {isAr ? "مستويات فيبوناتشي" : "FIBONACCI LEVELS (GOLDEN ZONE)"}
+                      </span>
+                      {s.fibLevels ? (
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono text-[9px] text-slate-350">
+                          <div className="flex justify-between">
+                            <span>61.8%</span>
+                            <span className="text-slate-200 font-semibold">{formatPrice(s.fibLevels.fib618)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>50.0%</span>
+                            <span className="text-slate-200 font-semibold">{formatPrice(s.fibLevels.fib500)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>78.6%</span>
+                            <span className="text-slate-350 font-semibold">{formatPrice(s.fibLevels.fib786)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>38.2%</span>
+                            <span className="text-slate-350 font-semibold">{formatPrice(s.fibLevels.fib382)}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-[9px] text-slate-500 italic block">{isAr ? "قيد الحساب التلقائي..." : "Recalibrating..."}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ensemble Votes */}
+                  {s.ensembleVotes && s.ensembleVotes.length > 0 && (
+                    <div className="border-t border-indigo-500/10 pt-2 flex flex-wrap gap-1 items-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mr-1">
+                        {isAr ? "الأصوات التوافقية:" : "ENSEMBLE CONSENSUS:"}
+                      </span>
+                      {s.ensembleVotes.map((vote, vIdx) => (
+                        <span key={vIdx} className="px-1.5 py-0.5 rounded bg-indigo-500/5 text-slate-300 border border-indigo-500/10 font-mono text-[8px] tracking-tight">
+                          {vote}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Detailed analysis notes */}
                 <div className="mt-4 pt-4 border-t border-white/5">
                   <span className="text-[10px] font-bold text-slate-400 block tracking-widest uppercase">

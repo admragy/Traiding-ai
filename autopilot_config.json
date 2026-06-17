@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "token": "8534208961:AAFJWJKmVZtQKiXaVGbX4LQKeG-oqBbpgzw",
+  "chatId": "2143248321",
+  "rigor": "normal",
+  "intervalMinutes": 180,
+  "activeCategories": [
+    "crypto"
+  ]
+}

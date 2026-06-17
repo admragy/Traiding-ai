@@ -228,6 +228,7 @@ loadAutopilotConfig();
 loadSignalHistory();
 
 // In-Memory Ticks index for background price swing generator
+const bootTime = Date.now();
 let backendTicksTick = 0;
 let autopilotIntervalTimerIdx: NodeJS.Timeout | null = null;
 
@@ -453,13 +454,19 @@ Keep the total text compact, clean, formatted with premium bullet points and zer
 }
 
 // Background scanner runner callback loop
-async function runAutopilotScanCycle() {
-  if (!autopilotConfig.enabled || !autopilotConfig.token || !autopilotConfig.chatId) {
+async function runAutopilotScanCycle(forceCheck: boolean = false) {
+  if (!forceCheck && (!autopilotConfig.enabled || !autopilotConfig.token || !autopilotConfig.chatId)) {
     console.log("Autopilot scan execution is currently paused or parameters are incomplete.");
     return;
   }
 
-  backendTicksTick++;
+  if (forceCheck && (!autopilotConfig.token || !autopilotConfig.chatId)) {
+    console.log("Forced Autopilot scan failed: Telegram credentials missing.");
+    return;
+  }
+
+  // Derived dynamically from real elapsed time since server boot (1 tick per 5 seconds)
+  backendTicksTick = Math.floor((Date.now() - bootTime) / 5000);
   autopilotDiags.scansCount++;
   autopilotDiags.lastScanTime = new Date().toISOString();
 
@@ -533,7 +540,7 @@ async function runAutopilotScanCycle() {
         if (scoreVal < finalThreshold) {
           // Pre-Signal Setup alerting triggers
           if (scoreVal >= preThreshold) {
-            const validation = validateSignalDispatch(s.pair, s.dirEn as "BUY" | "SELL", true);
+            const validation = forceCheck ? { allowed: true } : validateSignalDispatch(s.pair, s.dirEn as "BUY" | "SELL", true);
             if (!validation.allowed) {
               console.log(`[Autopilot Server Thread] Pre-signal delivery suppressed: ${validation.reason}`);
               continue;
@@ -578,7 +585,7 @@ async function runAutopilotScanCycle() {
         }
 
         // Anti-spam & duplicate/conflict validation per symbol for final signals
-        const validation = validateSignalDispatch(s.pair, s.dirEn as "BUY" | "SELL", false);
+        const validation = forceCheck ? { allowed: true } : validateSignalDispatch(s.pair, s.dirEn as "BUY" | "SELL", false);
         if (!validation.allowed) {
           console.log(`[Autopilot Server Thread] Final signal delivery suppressed: ${validation.reason}`);
           continue;
@@ -669,6 +676,7 @@ async function runAutopilotScanCycle() {
 function startAutopilotBackgroundLoop() {
   if (autopilotIntervalTimerIdx) {
     clearInterval(autopilotIntervalTimerIdx);
+    clearTimeout(autopilotIntervalTimerIdx);
     autopilotIntervalTimerIdx = null;
   }
 
@@ -676,7 +684,6 @@ function startAutopilotBackgroundLoop() {
     autopilotDiags.running = true;
     console.log(`🤖 Starting Autopilot background scanner server worker. Interval: every ${autopilotConfig.intervalMinutes} minutes.`);
     
-    // Execute first run immediately ONLY if the last scan was more than intervalMinutes ago (or if never scanned)
     const now = Date.now();
     const lastScan = autopilotDiags.lastScanTime ? new Date(autopilotDiags.lastScanTime).getTime() : 0;
     const diffMs = now - lastScan;
@@ -685,14 +692,25 @@ function startAutopilotBackgroundLoop() {
     if (autopilotDiags.scansCount === 0 || diffMs >= intervalMs) {
       console.log(`[Autopilot Server Thread] Last scan was ${lastScan === 0 ? "never" : Math.round(diffMs / 1000 / 60) + "m ago"}. Running immediate scan...`);
       runAutopilotScanCycle();
+      
+      autopilotIntervalTimerIdx = setInterval(() => {
+        runAutopilotScanCycle();
+      }, intervalMs);
     } else {
-      const waitMinutes = Math.ceil((intervalMs - diffMs) / 1000 / 60);
-      console.log(`[Autopilot Server Thread] Recent scan detected inside the interval window. Next scan scheduled in progress. Approx remaining: ${waitMinutes}m.`);
+      const waitMs = intervalMs - diffMs;
+      const waitMinutes = Math.ceil(waitMs / 1000 / 60);
+      console.log(`[Autopilot Server Thread] Recent scan detected inside the interval window. Next scan scheduled to run in ${waitMinutes}m.`);
+      
+      // Schedule a one-time timeout for the remaining time, after which the regular interval starts
+      autopilotIntervalTimerIdx = setTimeout(() => {
+        runAutopilotScanCycle();
+        
+        // Setup the standard recurring interval
+        autopilotIntervalTimerIdx = setInterval(() => {
+          runAutopilotScanCycle();
+        }, intervalMs);
+      }, waitMs);
     }
-
-    autopilotIntervalTimerIdx = setInterval(() => {
-      runAutopilotScanCycle();
-    }, autopilotConfig.intervalMinutes * 60 * 1000);
   } else {
     autopilotDiags.running = false;
     console.log("🤖 Autopilot server-side loop has been deactivated.");
@@ -1008,6 +1026,29 @@ async function startServer() {
       config: autopilotConfig,
       diagnostics: autopilotDiags,
     });
+  });
+
+  app.post("/api/autopilot/force-scan", async (req, res) => {
+    try {
+      const cleanToken = String(autopilotConfig.token || "").trim();
+      const cleanChatId = String(autopilotConfig.chatId || "").trim();
+
+      if (!cleanToken || !cleanChatId) {
+        return res.status(400).json({ error: "Missing Bot Token or Chat ID for executing manual scan." });
+      }
+
+      console.log("[Autopilot Server] Triggering manual/forced immediate scan cycle...");
+      await runAutopilotScanCycle(true); // pass forceCheck = true
+
+      res.json({
+        success: true,
+        message: "Immediate scan and dispatch completed.",
+        diagnostics: autopilotDiags,
+      });
+    } catch (err: any) {
+      console.error("Forced scan failed:", err);
+      res.status(500).json({ error: err.message || "Forced scan execution failed." });
+    }
   });
 
   app.post("/api/autopilot/test", async (req, res) => {

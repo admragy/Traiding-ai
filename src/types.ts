@@ -27,6 +27,10 @@ export interface Asset {
   bbPercentB?: number;
   supportPrice?: number;
   resistancePrice?: number;
+  orderBookImbalance?: number;
+  volumeClusterIntensity?: number;
+  fibLevels?: { swingHigh: number; swingLow: number; fib382: number; fib500: number; fib618: number; fib786: number };
+  ensembleVotes?: string[];
 }
 
 export interface Signal {
@@ -49,6 +53,10 @@ export interface Signal {
   exitStrategyEn: string;
   exitStrategyAr: string;
   score: number;
+  orderBookImbalance?: number;
+  volumeClusterIntensity?: number;
+  fibLevels?: { swingHigh: number; swingLow: number; fib382: number; fib500: number; fib618: number; fib786: number };
+  ensembleVotes?: string[];
 }
 
 export interface Analysis {
