@@ -837,10 +837,20 @@ async function generateContentWithRetryAndFallback(
           throw err;
         }
 
-        // If it's a quota exceeded 429 error, disable this model and proceed to the next fallback model immediately!
-        if (code === 429 || msg.includes("429") || msg.includes("Quota exceeded") || msg.includes("RESOURCE_EXHAUSTED")) {
-          console.warn(`[AI Resiliency Gate] 429 Quota Exceeded for ${model}. Registering temporary backlist block.`);
-          disableModelTemporarily(model);
+        // If it's a quota exceeded 429 or high demand 503 error, disable this model and proceed to the next fallback model immediately!
+        if (
+          code === 429 || 
+          code === 503 ||
+          msg.includes("429") || 
+          msg.includes("503") ||
+          msg.includes("Quota exceeded") || 
+          msg.includes("RESOURCE_EXHAUSTED") ||
+          msg.includes("UNAVAILABLE") ||
+          msg.includes("high demand")
+        ) {
+          const isDemandError = code === 503 || msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("high demand");
+          console.warn(`[AI Resiliency Gate] ${isDemandError ? '503 High Demand/Unavailable' : '429 Quota Exceeded'} for ${model}. Registering temporary blacklist block.`);
+          disableModelTemporarily(model, isDemandError ? 2 * 60 * 1000 : 15 * 60 * 1000);
           break; // Break out of the attempts loop for this model; proceeds to the next model in modelsToTry
         }
 
