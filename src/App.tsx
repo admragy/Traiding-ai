@@ -11,6 +11,7 @@ import MarketStateSection from "./components/MarketStateSection";
 import SignalsPanel from "./components/SignalsPanel";
 import UniverseTable from "./components/UniverseTable";
 import FinancialAdvisorPanel from "./components/FinancialAdvisorPanel";
+import SimulatedExecutionLedger from "./components/SimulatedExecutionLedger";
 
 const PAIRS = [
   // ======= Forex (20 pairs) =======
@@ -462,6 +463,14 @@ export default function App() {
               <FinancialAdvisorPanel
                 signals={analysis.signals}
                 marketRegime={analysis.regime}
+                language={language}
+              />
+            )}
+
+            {/* Simulated Live Automated Trade Execution ledger */}
+            {analysis && (
+              <SimulatedExecutionLedger
+                signals={analysis.signals}
                 language={language}
               />
             )}

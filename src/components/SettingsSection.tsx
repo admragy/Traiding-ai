@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Settings, Send, RefreshCw, Globe, HelpCircle, ShieldAlert, Cpu, Sparkles, Play, Square, Activity, ChevronDown } from "lucide-react";
+import { Settings, Send, RefreshCw, Globe, HelpCircle, ShieldAlert, Cpu, Sparkles, Play, Square, Activity, ChevronDown, Copy, Check, Info } from "lucide-react";
 import { translations } from "../translations";
 import { TelegramConfig, RigorLevel, Category } from "../types";
 
@@ -40,6 +40,16 @@ export default function SettingsSection({
   const [reportLoading, setReportLoading] = useState(false);
   const [forceScanLoading, setForceScanLoading] = useState(false);
   const [testFeedback, setTestFeedback] = useState<{ status: "success" | "error" | "none"; msg: string }>({ status: "none", msg: "" });
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    const healthUrl = `${window.location.origin}/api/health`;
+    navigator.clipboard.writeText(healthUrl);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2500);
+  };
 
   // Autopilot 24/7 background worker state
   const [autopilotEnabled, setAutopilotEnabled] = useState(false);
@@ -659,6 +669,52 @@ export default function SettingsSection({
                   {forceScanLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-2.5 h-2.5 text-emerald-400" />}
                   <span>{isAr ? "فحص فوري وبث الإشارات المحتملة الآن" : "Trigger Immediate Scan & Dispatch Now"}</span>
                 </button>
+
+                {/* 24/7 Keep-Alive Guide */}
+                <div className="mt-3.5 p-3.5 rounded-xl bg-indigo-950/20 border border-indigo-500/15 text-left text-xs leading-normal">
+                  <div className="flex items-center gap-2 text-indigo-400 font-bold mb-1.5">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>
+                      {isAr 
+                        ? "الضمان الفائق للعمل 24/7 (دون نوم الخادم)" 
+                        : "Ensure 24/7 Delivery (Prevent Server Sleep)"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-sans mb-3 leading-relaxed">
+                    {isAr 
+                      ? "تطبيقك مستضاف سحابياً. عند غلق هاتفك وعدم استخدام الموقع لـ 15 دقيقة، تغفو الخوادم لتوفير الطاقة. لضمان عدم غفلتها وإرسال الإشارات بانتظام في ميعادها بدقة:" 
+                      : "The server on Cloud Run sleeps when there is active inactivity (after ~15 mins of no visitors). To keep the bot awake and sending telegram signals continuously 24/7:"}
+                  </p>
+                  <ol className="text-[9.5px] text-slate-300 list-decimal list-inside space-y-1 mb-3.5 font-sans">
+                    {isAr ? (
+                      <>
+                        <li>سجّل مجاناً بموقع مراقبة مثل <a href="https://uptimerobot.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">UptimeRobot.com</a></li>
+                        <li>قم بإضافة مسبار جديد من نوع <b>HTTP(s) Monitor</b></li>
+                        <li>الصق رابط الحيوية أدناه، واجعل التكرار كل <b>5 دقائق</b> لضمان يقظة البوت المستمرة!</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>Register a free account on <a href="https://uptimerobot.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline text-indigo-300">UptimeRobot.com</a> or similar.</li>
+                        <li>Create a new monitoring check of type <b>HTTP(s) Monitor</b>.</li>
+                        <li>Paste your unique health link below and set it to check/ping every <b>5 minutes</b>.</li>
+                      </>
+                    )}
+                  </ol>
+                  
+                  <div className="bg-slate-950 border border-slate-850 rounded-lg p-2 flex items-center justify-between gap-2 font-mono">
+                    <span className="text-[9px] text-zinc-400 text-left select-all overflow-x-auto whitespace-nowrap scrollbar-none flex-1">
+                      {typeof window !== "undefined" ? window.location.origin : ""}/api/health
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="px-2.5 py-1 bg-indigo-650 hover:bg-indigo-600 border border-indigo-550/20 text-white rounded text-[9px] font-bold flex items-center gap-1 cursor-pointer shrink-0 transition"
+                    >
+                      {copied ? <Check className="w-3" /> : <Copy className="w-3" />}
+                      <span>{copied ? (isAr ? "تم النسخ!" : "Copied!") : (isAr ? "نسخ الرابط" : "Copy Link")}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </details>

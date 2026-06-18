@@ -77,16 +77,27 @@ export interface TelegramConfig {
 
 export type ThemeType = "carbon" | "matrix" | "amber" | "light";
 
-export interface WorkspaceSnapshot {
+export interface SimulatedTrade {
   id: string;
-  name: string;
-  createdAt: string;
-  theme: ThemeType;
-  selectedCategory: "all" | Category;
-  focusedSymbols: string[];
-  focusOnlyMode: boolean;
-  activeCategories: Exclude<Category, "all">[];
-  rigor: RigorLevel;
-  language: "en" | "ar";
+  pair: string;
+  direction: "BUY" | "SELL";
+  entryPrice: number;
+  currentPrice: number;
+  stopLoss: number;
+  takeProfit1: number;
+  takeProfit2: number;
+  takeProfit3: number;
+  unitSize: number;
+  capitalRiskedPct: number;
+  status: "OPEN" | "TP1" | "TP2" | "TP3" | "SL" | "CLOSED";
+  profitUSD: number;
+  openTime: string;
+  closeTime?: string;
+}
+
+export interface SimulatedAccount {
+  balance: number;
+  initialBalance: number;
+  pnlHistory: { timestamp: string; balance: number }[];
 }
 
